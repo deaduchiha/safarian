@@ -1,4 +1,4 @@
-export const appName = 'circle';
+export const appName = 'CIRCLE';
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';

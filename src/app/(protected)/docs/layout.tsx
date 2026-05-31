@@ -10,9 +10,11 @@ export default async function Layout({ children }: LayoutProps<"/docs">) {
     <DocsLayout
       tree={source.getPageTree()}
       {...baseOptions({
-        // children: user ? (
-        //   <span className="text-sm text-muted-foreground">{user.role}</span>
-        // ) : null,
+        children: user ? (
+          <span className="text-sm text-muted-foreground flex items-center gap-2">
+            {user.username}
+          </span>
+        ) : null,
       })}
     >
       {children}

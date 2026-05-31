@@ -12,7 +12,7 @@ export function baseOptions({
 }: BaseOptionsArgs = {}): BaseLayoutProps {
   return {
     nav: {
-      title: "آموزش",
+      title: appName,
       children,
     },
     links: [

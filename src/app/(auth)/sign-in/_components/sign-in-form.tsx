@@ -17,6 +17,7 @@ export function SignInForm() {
       <div className="space-y-2">
         <Label htmlFor="username">نام کاربری</Label>
         <Input
+          placeholder="username"
           dir="ltr"
           id="username"
           name="username"
@@ -27,6 +28,7 @@ export function SignInForm() {
       <div className="space-y-2">
         <Label htmlFor="password">رمز عبور</Label>
         <Input
+          placeholder="password"
           dir="ltr"
           id="password"
           name="password"
