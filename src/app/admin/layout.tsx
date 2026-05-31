@@ -1,20 +1,18 @@
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { UserNav } from '@/components/user-nav';
-import { getCurrentUser } from '@/lib/auth';
-import { appName } from '@/lib/shared';
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { UserNav } from "@/components/user-nav";
+import { getCurrentUser } from "@/lib/auth";
+import { appName } from "@/lib/shared";
 
-export default async function AdminLayout({
-  children,
-}: LayoutProps<'/admin'>) {
+export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/sign-in');
+    redirect("/sign-in");
   }
 
-  if (user.role !== 'admin') {
-    redirect('/docs');
+  if (user.role !== "admin") {
+    redirect("/docs");
   }
 
   return (
