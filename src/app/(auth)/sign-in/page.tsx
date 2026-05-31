@@ -1,5 +1,5 @@
-import { SignInForm } from './_components/sign-in-form';
-import { appName } from '@/lib/shared';
+import { SignInForm } from "./_components/sign-in-form";
+import { appName } from "@/lib/shared";
 
 export default function SignInPage() {
   return (

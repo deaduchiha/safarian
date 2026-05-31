@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useActionState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { signInAction } from '../actions';
+import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { signInAction } from "../actions";
 
 export function SignInForm() {
   const [state, formAction, isPending] = useActionState(signInAction, null);
@@ -17,6 +17,7 @@ export function SignInForm() {
       <div className="space-y-2">
         <Label htmlFor="username">نام کاربری</Label>
         <Input
+          dir="ltr"
           id="username"
           name="username"
           autoComplete="username"
@@ -26,6 +27,7 @@ export function SignInForm() {
       <div className="space-y-2">
         <Label htmlFor="password">رمز عبور</Label>
         <Input
+          dir="ltr"
           id="password"
           name="password"
           type="password"
@@ -37,7 +39,7 @@ export function SignInForm() {
         <p className="text-sm text-destructive">{state.error}</p>
       ) : null}
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? 'در حال ورود...' : 'ورود'}
+        {isPending ? "در حال ورود..." : "ورود"}
       </Button>
     </form>
   );
