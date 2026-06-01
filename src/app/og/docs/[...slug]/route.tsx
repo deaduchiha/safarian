@@ -1,21 +1,24 @@
-import { getPageImage, source } from "@/lib/source";
-import { notFound } from "next/navigation";
-import { ImageResponse } from "next/og";
-import { generate as DefaultImage } from "fumadocs-ui/og";
-import { appName } from "@/lib/shared";
+import { OgImage } from '@/components/og-image';
+import { getOgFonts } from '@/lib/og-fonts';
+import { getPageImage, source } from '@/lib/source';
+import { appName } from '@/lib/shared';
+import { ImageResponse } from 'next/og';
+import { notFound } from 'next/navigation';
 
 export const revalidate = false;
 
 export async function GET(
   _req: Request,
-  { params }: RouteContext<"/og/docs/[...slug]">,
+  { params }: RouteContext<'/og/docs/[...slug]'>,
 ) {
   const { slug } = await params;
   const page = source.getPage(slug.slice(0, -1));
   if (!page) notFound();
 
+  const fonts = await getOgFonts();
+
   return new ImageResponse(
-    <DefaultImage
+    <OgImage
       title={page.data.title}
       description={page.data.description}
       site={appName}
@@ -23,6 +26,7 @@ export async function GET(
     {
       width: 1200,
       height: 630,
+      fonts,
     },
   );
 }
