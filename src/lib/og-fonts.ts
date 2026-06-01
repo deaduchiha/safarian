@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import wawoff2 from 'wawoff2';
 
 const fontDir = join(process.cwd(), 'public/arad');
 
@@ -12,31 +13,24 @@ type OgFont = {
 
 let fontsPromise: Promise<OgFont[]> | null = null;
 
+async function loadFont(file: string, weight: OgFont['weight']): Promise<OgFont> {
+  const woff2 = await readFile(join(fontDir, file));
+  const data = Buffer.from(await wawoff2.decompress(woff2));
+
+  return {
+    name: 'Arad',
+    data,
+    weight,
+    style: 'normal',
+  };
+}
+
 export function getOgFonts() {
   if (!fontsPromise) {
     fontsPromise = Promise.all([
-      readFile(join(fontDir, 'Arad-Regular.woff2')),
-      readFile(join(fontDir, 'Arad-SemiBold.woff2')),
-      readFile(join(fontDir, 'Arad-Bold.woff2')),
-    ]).then(([regular, semibold, bold]) => [
-      {
-        name: 'Arad',
-        data: regular,
-        weight: 400,
-        style: 'normal',
-      },
-      {
-        name: 'Arad',
-        data: semibold,
-        weight: 600,
-        style: 'normal',
-      },
-      {
-        name: 'Arad',
-        data: bold,
-        weight: 700,
-        style: 'normal',
-      },
+      loadFont('Arad-Regular.woff2', 400),
+      loadFont('Arad-SemiBold.woff2', 600),
+      loadFont('Arad-Bold.woff2', 700),
     ]);
   }
 
