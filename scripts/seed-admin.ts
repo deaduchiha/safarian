@@ -9,6 +9,24 @@ import { randomUUID } from 'node:crypto';
 
 config({ path: '.env.local' });
 
+async function ensureSchema() {
+  try {
+    await db.select({ id: users.id }).from(users).limit(1);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes('no such table')
+    ) {
+      console.error(
+        'Database tables are missing. Run this first:\n\n  npm run db:push\n',
+      );
+      process.exit(1);
+    }
+
+    throw error;
+  }
+}
+
 async function updateUserCredentials(
   userId: number,
   password: string,
@@ -43,6 +61,8 @@ async function updateUserCredentials(
 }
 
 async function seed() {
+  await ensureSchema();
+
   const username = process.env.SEED_ADMIN_USERNAME ?? 'admin';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'admin123';
 
