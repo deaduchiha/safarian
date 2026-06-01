@@ -1,11 +1,12 @@
 import { OgImage } from '@/components/og-image';
 import { getOgFonts } from '@/lib/og-fonts';
-import { getPageImage, source } from '@/lib/source';
+import { source } from '@/lib/source';
 import { appName } from '@/lib/shared';
 import { ImageResponse } from 'next/og';
 import { notFound } from 'next/navigation';
 
-export const revalidate = false;
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   _req: Request,
@@ -29,11 +30,4 @@ export async function GET(
       fonts,
     },
   );
-}
-
-export function generateStaticParams() {
-  return source.getPages().map((page) => ({
-    lang: page.locale,
-    slug: getPageImage(page).segments,
-  }));
 }
