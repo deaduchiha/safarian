@@ -1,12 +1,14 @@
 module.exports = {
-  apps: [{
-    name: 'safarian',
-    script: 'npm',
-    args: 'start -- -p 3004',
-    cwd: '/var/www/safa',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3004
+  apps: [
+    {
+      name: 'safarian',
+      script: 'npm',
+      args: 'start',
+      cwd: '/srv/safarian/safarian',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3004
+      }
     }
-  }]
+  ]
 }
