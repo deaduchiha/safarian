@@ -9,12 +9,27 @@ import * as schema from '@/lib/schema';
 import { getVerifiedSessionToken } from '@/lib/session-token';
 import { type SafeUser, type UserRole, sessions, users } from '@/lib/schema';
 
-const baseURL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3004';
+const baseURL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3000';
+const productionOrigins = ['https://pc.nikode.ir', 'https://www.pc.nikode.ir'];
+const trustedOrigins = Array.from(new Set([baseURL, ...productionOrigins]));
+const baseHost = new URL(baseURL).hostname;
+const usesProductionHost =
+  baseHost === 'pc.nikode.ir' || baseHost.endsWith('.pc.nikode.ir');
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL,
-  trustedOrigins: [baseURL,"https://pc.nikode.ir","https://www.pc.nikode.ir"],
+  trustedOrigins,
+  advanced: {
+    ...(usesProductionHost
+      ? {
+          crossSubDomainCookies: {
+            enabled: true,
+            domain: 'pc.nikode.ir',
+          },
+        }
+      : {}),
+  },
   database: drizzleAdapter(db, {
     provider: 'sqlite',
     schema: {
