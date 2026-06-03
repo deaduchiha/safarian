@@ -4,6 +4,8 @@ import { UserNav } from "@/components/user-nav";
 import { getCurrentUser } from "@/lib/auth";
 import { appName } from "@/lib/shared";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const user = await getCurrentUser();
 

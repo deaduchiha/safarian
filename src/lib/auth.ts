@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, gt } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -6,7 +6,8 @@ import { nextCookies } from 'better-auth/next-js';
 import { username } from 'better-auth/plugins';
 import { db } from '@/lib/db';
 import * as schema from '@/lib/schema';
-import { type SafeUser, type UserRole, users } from '@/lib/schema';
+import { getVerifiedSessionToken } from '@/lib/session-token';
+import { type SafeUser, type UserRole, sessions, users } from '@/lib/schema';
 
 const baseURL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3004';
 
@@ -56,48 +57,56 @@ export function toSafeUser(user: typeof users.$inferSelect): SafeUser {
   return safeUser;
 }
 
+async function getUserById(userId: number): Promise<SafeUser | null> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+  return user ? toSafeUser(user) : null;
+}
+
+async function getUserFromSessionToken(token: string): Promise<SafeUser | null> {
+  const row = await db.query.sessions.findFirst({
+    where: and(eq(sessions.token, token), gt(sessions.expiresAt, new Date())),
+  });
+  if (!row) {
+    return null;
+  }
+  return getUserById(row.userId);
+}
+
 export async function getCurrentUser(): Promise<SafeUser | null> {
   const headersList = await headers();
   const cookieHeader = headersList.get('cookie') ?? '';
+  const secret = process.env.BETTER_AUTH_SECRET;
 
-  // Read cache first — does not delete cookies when lookup fails.
-  if (cookieHeader) {
-    const { getCookieCache } = await import('better-auth/cookies');
-    const cached = await getCookieCache(
-      new Request(baseURL, { headers: { cookie: cookieHeader } }),
-      { secret: process.env.BETTER_AUTH_SECRET },
-    );
-    if (cached?.user?.id) {
-      const userId = Number(cached.user.id);
-      if (!Number.isNaN(userId)) {
-        const user = await db.query.users.findFirst({
-          where: eq(users.id, userId),
-        });
-        if (user) {
-          return toSafeUser(user);
-        }
+  if (!cookieHeader || !secret) {
+    return null;
+  }
+
+  // Cookie cache — read-only, never clears cookies on failure.
+  const { getCookieCache } = await import('better-auth/cookies');
+  const cached = await getCookieCache(
+    new Request(baseURL, { headers: { cookie: cookieHeader } }),
+    { secret },
+  );
+  if (cached?.user?.id) {
+    const userId = Number(cached.user.id);
+    if (!Number.isNaN(userId)) {
+      const user = await getUserById(userId);
+      if (user) {
+        return user;
       }
     }
   }
 
-  const session = await auth.api.getSession({
-    headers: headersList,
-  });
-
-  if (!session?.user) {
+  // DB lookup from signed session cookie — never call auth.api.getSession here;
+  // getSession sends Set-Cookie headers that delete the session when lookup fails.
+  const token = await getVerifiedSessionToken(cookieHeader, secret);
+  if (!token) {
     return null;
   }
 
-  const userId = Number(session.user.id);
-  if (Number.isNaN(userId)) {
-    return null;
-  }
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-  });
-
-  return user ? toSafeUser(user) : null;
+  return getUserFromSessionToken(token);
 }
 
 export async function requireAdmin(): Promise<SafeUser> {
