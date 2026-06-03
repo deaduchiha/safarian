@@ -13,7 +13,7 @@ const baseURL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3004';
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL,
-  trustedOrigins: [baseURL],
+  trustedOrigins: [baseURL,"https://pc.nikode.ir","https://www.pc.nikode.ir"],
   database: drizzleAdapter(db, {
     provider: 'sqlite',
     schema: {
@@ -38,6 +38,12 @@ export const auth = betterAuth({
     },
   },
   plugins: [username(), nextCookies()],
+  advanced:{
+    useSecureCookies: true,        // if using HTTPS
+    crossSubDomainCookies: {
+      enabled:false
+    }
+  }
 });
 
 export type Session = typeof auth.$Infer.Session;

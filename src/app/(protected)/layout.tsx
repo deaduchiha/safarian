@@ -1,13 +1,13 @@
-import { redirect } from 'next/navigation';
-import { getCurrentUser } from '@/lib/auth';
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 
 export default async function ProtectedLayout({
   children,
-}: LayoutProps<'/docs'>) {
+}: LayoutProps<"/docs">) {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/sign-in');
+    redirect("/sign-in");
   }
 
   return children;
