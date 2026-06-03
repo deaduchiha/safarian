@@ -1,6 +1,6 @@
 import { isMarkdownPreferred, rewritePath } from 'fumadocs-core/negotiation';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { hasSessionCookie } from '@/lib/auth-cookie';
 import { docsContentRoute, docsRoute } from '@/lib/shared';
 
 const { rewrite: rewriteDocs } = rewritePath(
@@ -12,13 +12,21 @@ const { rewrite: rewriteSuffix } = rewritePath(
   `${docsContentRoute}{/*path}/content.md`,
 );
 
-/** RSC / Link prefetch requests often omit cookies; auth must not redirect those. */
 function isRscOrPrefetch(request: NextRequest) {
+  if (request.nextUrl.searchParams.has('_rsc')) {
+    return true;
+  }
+
+  const secFetchDest = request.headers.get('sec-fetch-dest');
+  const secFetchMode = request.headers.get('sec-fetch-mode');
+
   return (
     request.headers.get('rsc') === '1' ||
     request.headers.get('Rsc') === '1' ||
     request.headers.get('next-router-prefetch') === '1' ||
-    request.headers.get('Next-Router-Prefetch') === '1'
+    request.headers.get('Next-Router-Prefetch') === '1' ||
+    request.headers.get('purpose') === 'prefetch' ||
+    (secFetchMode === 'cors' && secFetchDest === 'empty')
   );
 }
 
@@ -54,12 +62,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
+  // Cookie-only checks (Better Auth docs). Never call auth.api.getSession here —
+  // a failed lookup sends Set-Cookie headers that DELETE the session cookie.
+  const hasCookie = hasSessionCookie(request);
 
   if (pathname === '/') {
-    if (session) {
+    if (hasCookie) {
       return NextResponse.redirect(new URL('/docs', request.url));
     }
 
@@ -67,34 +75,14 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname.startsWith('/sign-in')) {
-    if (session) {
+    if (hasCookie) {
       return NextResponse.redirect(new URL('/docs', request.url));
     }
 
     return NextResponse.next();
   }
 
-  if (pathname.startsWith('/docs')) {
-    if (!session) {
-      return NextResponse.redirect(new URL('/sign-in', request.url));
-    }
-
-    return NextResponse.next();
-  }
-
-  if (pathname.startsWith('/admin')) {
-    if (!session) {
-      return NextResponse.redirect(new URL('/sign-in', request.url));
-    }
-
-    const role = session.user.role as string | undefined;
-    if (role !== 'admin') {
-      return NextResponse.redirect(new URL('/docs', request.url));
-    }
-
-    return NextResponse.next();
-  }
-
+  // /docs and /admin: real validation in route layouts only
   return NextResponse.next();
 }
 

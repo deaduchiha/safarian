@@ -37,13 +37,15 @@ export const auth = betterAuth({
       },
     },
   },
+  session: {
+    // Avoid session refresh writes during RSC/proxy; prevents cookie churn in Next.js.
+    deferSessionRefresh: true,
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5,
+    },
+  },
   plugins: [username(), nextCookies()],
-  advanced:{
-    useSecureCookies: true,        // if using HTTPS
-    crossSubDomainCookies: {
-      enabled:false
-    }
-  }
 });
 
 export type Session = typeof auth.$Infer.Session;
@@ -55,8 +57,31 @@ export function toSafeUser(user: typeof users.$inferSelect): SafeUser {
 }
 
 export async function getCurrentUser(): Promise<SafeUser | null> {
+  const headersList = await headers();
+  const cookieHeader = headersList.get('cookie') ?? '';
+
+  // Read cache first — does not delete cookies when lookup fails.
+  if (cookieHeader) {
+    const { getCookieCache } = await import('better-auth/cookies');
+    const cached = await getCookieCache(
+      new Request(baseURL, { headers: { cookie: cookieHeader } }),
+      { secret: process.env.BETTER_AUTH_SECRET },
+    );
+    if (cached?.user?.id) {
+      const userId = Number(cached.user.id);
+      if (!Number.isNaN(userId)) {
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+        if (user) {
+          return toSafeUser(user);
+        }
+      }
+    }
+  }
+
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: headersList,
   });
 
   if (!session?.user) {

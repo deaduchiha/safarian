@@ -2,10 +2,9 @@
 
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 export async function signInAction(
-  _prevState: { error?: string } | null,
+  _prevState: { error?: string; ok?: boolean } | null,
   formData: FormData,
 ) {
   const username = formData.get('username');
@@ -31,5 +30,6 @@ export async function signInAction(
     return { error: 'نام کاربری یا رمز عبور اشتباه است' };
   }
 
-  redirect('/docs');
+  // Client uses full page navigation so cookies are committed before /docs loads.
+  return { ok: true };
 }

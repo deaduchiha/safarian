@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,12 @@ import { signInAction } from "../actions";
 
 export function SignInForm() {
   const [state, formAction, isPending] = useActionState(signInAction, null);
+
+  useEffect(() => {
+    if (state?.ok) {
+      window.location.assign("/docs");
+    }
+  }, [state?.ok]);
 
   return (
     <form
