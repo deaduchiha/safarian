@@ -12,6 +12,16 @@ const { rewrite: rewriteSuffix } = rewritePath(
   `${docsContentRoute}{/*path}/content.md`,
 );
 
+/** RSC / Link prefetch requests often omit cookies; auth must not redirect those. */
+function isRscOrPrefetch(request: NextRequest) {
+  return (
+    request.headers.get('rsc') === '1' ||
+    request.headers.get('Rsc') === '1' ||
+    request.headers.get('next-router-prefetch') === '1' ||
+    request.headers.get('Next-Router-Prefetch') === '1'
+  );
+}
+
 function handleMarkdownRewrite(request: NextRequest) {
   const suffixResult = rewriteSuffix(request.nextUrl.pathname);
   if (suffixResult) {
@@ -37,6 +47,10 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api/auth')) {
+    return NextResponse.next();
+  }
+
+  if (isRscOrPrefetch(request)) {
     return NextResponse.next();
   }
 
