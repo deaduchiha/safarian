@@ -1,6 +1,8 @@
 module.exports = {
   apps: [
     {
+      instances: 1,
+      exec_mode: "fork",
       name: 'safarian',
       script: 'npm',
       args: 'start',
