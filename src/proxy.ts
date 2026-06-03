@@ -58,6 +58,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Legacy GET /auth/sign-out used to sign users out when Next.js prefetched the docs nav link.
+  if (pathname.startsWith('/auth/sign-out')) {
+    return NextResponse.redirect(new URL('/docs', request.url));
+  }
+
   if (isRscOrPrefetch(request)) {
     return NextResponse.next();
   }

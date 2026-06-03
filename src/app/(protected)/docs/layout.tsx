@@ -1,3 +1,4 @@
+import { SignOutButton } from "@/components/sign-out-button";
 import { getCurrentUser } from "@/lib/auth";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
@@ -11,8 +12,9 @@ export default async function Layout({ children }: LayoutProps<"/docs">) {
       tree={source.getPageTree()}
       {...baseOptions({
         children: user ? (
-          <span className="text-sm text-muted-foreground flex items-center gap-2">
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
             {user.username}
+            <SignOutButton />
           </span>
         ) : null,
       })}
